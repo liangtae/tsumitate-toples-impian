@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>積立 Tsumitate — Toples Impian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<style>
+/* ============================================================
+   積立 TSUMITATE — token system
+   Palette: washi cream / sumi ink / ai indigo / shu red / gold koban
+   Display: Shippori Mincho | Body: Zen Maru Gothic / Noto Sans JP
+   Signature: mason jar that fills with koban coins per goal
+   ============================================================ */
+:root[data-theme="light"]{
+  --bg:#F1E9D8; --bg-soft:#E8DCC0; --surface:#FFFCF5; --surface-2:#F7EFDD;
+  --ink:#2A2420; --ink-soft:#726556; --ink-faint:#A69A87;
+  --indigo:#28495E; --indigo-deep:#173241; --indigo-soft:#5C86A0;
+  --shu:#B23A2E; --shu-soft:#D66657;
+  --gold:#B9903D; --gold-soft:#E3C787; --gold-deep:#8A6B26;
+  --moss:#6B7A54;
+  --border:rgba(42,36,32,.14); --border-soft:rgba(42,36,32,.08);
+  --shadow:0 14px 34px rgba(42,36,32,.10), 0 2px 8px rgba(42,36,32,.06);
+  --paper-noise: radial-gradient(rgba(42,36,32,.035) 1px, transparent 1px);
+}
+:root[data-theme="dark"]{
+  --bg:#171310; --bg-soft:#1D1712; --surface:#221B15; --surface-2:#2A2117;
+  --ink:#F0E6D2; --ink-soft:#BFAE93; --ink-faint:#7C7060;
+  --indigo:#7FA8C2; --indigo-deep:#4C7791; --indigo-soft:#3E6479;
+  --shu:#E1685A; --shu-soft:#C24A3D;
+  --gold:#E6C878; --gold-soft:#F2DFA8; --gold-deep:#B99A4C;
+  --moss:#9AAD7E;
+  --border:rgba(240,230,210,.14); --border-soft:rgba(240,230,210,.08);
+  --shadow:0 14px 34px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+  --paper-noise: radial-gradient(rgba(240,230,210,.03) 1px, transparent 1px);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    var(--paper-noise) 0 0/14px 14px,
+    linear-gradient(180deg,var(--bg) 0%,var(--bg-soft) 100%);
+  color:var(--ink);
+  font-family:'Noto Sans JP','Zen Maru Gothic',sans-serif;
+  transition:background .4s ease,color .4s ease;
+  min-height:100vh;
+  padding-bottom:60px;
+}
+h1,h2,h3,.disp{font-family:'Shippori Mincho',serif;}
+::selection{background:var(--gold-soft);color:var(--indigo-deep);}
+a{color:inherit;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+/* seigaiha wave divider */
+.seigaiha{
+  height:18px;width:100%;
+  background-image:
+    radial-gradient(circle at 0 100%, transparent 9px, var(--indigo) 9.5px, var(--indigo) 10px, transparent 10.5px),
+    radial-gradient(circle at 20px 100%, transparent 9px, var(--indigo) 9.5px, var(--indigo) 10px, transparent 10.5px);
+  background-size:20px 18px; background-repeat:repeat-x; opacity:.35;
+}
+
+/* ---------- topbar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:14px 22px; backdrop-filter:blur(10px);
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand svg{width:36px;height:36px;}
+.brand h1{margin:0;font-size:1.35rem;color:var(--indigo-deep);line-height:1;}
+[data-theme="dark"] .brand h1{color:var(--gold-soft);}
+.brand h1 small{display:block;font-family:'Noto Sans JP',sans-serif;font-weight:400;font-size:.62rem;letter-spacing:.16em;color:var(--ink-soft);text-transform:uppercase;margin-top:3px;}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.search-wrap{position:relative;}
+.search-wrap input{
+  width:190px; padding:9px 12px 9px 32px; border-radius:20px; border:1px solid var(--border);
+  background:var(--surface-2); color:var(--ink); font-size:.85rem; outline:none;transition:.2s;
+}
+.search-wrap input:focus{border-color:var(--indigo-soft); width:230px;}
+.search-wrap .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.55;font-size:.85rem;}
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;font-size:1.05rem;color:var(--ink);
+  transition:.2s;
+}
+.icon-btn:hover{background:var(--gold-soft);border-color:var(--gold);transform:translateY(-1px);}
+
+/* ---------- hero ---------- */
+.hero{
+  display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap;
+  padding:38px 22px 22px;text-align:center;position:relative;
+}
+.hero-jar{position:relative;width:200px;}
+.hero-text h2{font-size:1.9rem;margin:0 0 6px;color:var(--indigo-deep);}
+[data-theme="dark"] .hero-text h2{color:var(--gold-soft);}
+.hero-text p{margin:0 0 14px;color:var(--ink-soft);font-size:.92rem;max-width:360px;}
+.hero-stats{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;}
+.hero-stat{text-align:left;}
+.hero-stat .num{font-family:'Shippori Mincho',serif;font-size:1.5rem;font-weight:700;color:var(--shu);}
+[data-theme="dark"] .hero-stat .num{color:var(--gold);}
+.hero-stat .lbl{font-size:.68rem;letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase;}
+
+/* ---------- controls bar ---------- */
+.controls-bar{
+  max-width:1100px;margin:10px auto 0;padding:0 22px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between;
+}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.chip{
+  padding:6px 13px;border-radius:16px;border:1px solid var(--border);background:var(--surface);
+  font-size:.78rem;color:var(--ink-soft);transition:.2s;user-select:none;
+}
+.chip.active,.chip:hover{background:var(--indigo);color:#fff;border-color:var(--indigo);}
+select.sortsel{
+  padding:7px 10px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-size:.8rem;
+}
+.btn{
+  padding:10px 18px;border-radius:22px;border:none;background:var(--shu);color:#fff;font-weight:600;font-size:.86rem;
+  box-shadow:0 6px 16px rgba(178,58,46,.28); transition:.2s; display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(178,58,46,.35);}
+.btn.secondary{background:var(--indigo);box-shadow:0 6px 16px rgba(40,73,94,.25);}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--border);box-shadow:none;}
+.btn.ghost:hover{background:var(--surface-2);}
+.btn.small{padding:6px 12px;font-size:.75rem;border-radius:14px;}
+.btn.danger{background:var(--shu-soft);}
+
+/* ---------- goals grid ---------- */
+.goals-grid{
+  max-width:1100px;margin:18px auto;padding:0 22px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;
+}
+.goal-card{
+  position:relative;background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  padding:18px 16px 16px;box-shadow:var(--shadow);overflow:hidden;
+  animation:cardIn .45s cubic-bezier(.2,.8,.2,1) backwards;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98);}to{opacity:1;transform:none;}}
+.goal-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--indigo),var(--gold));
+}
+.goal-card.pinned{border-color:var(--gold);}
+.pin-seal{
+  position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;
+  background:var(--shu);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;box-shadow:0 3px 8px rgba(178,58,46,.4);transform:rotate(8deg);
+  font-family:'Shippori Mincho',serif;
+}
+.goal-top{display:flex;gap:14px;align-items:center;}
+.goal-jar-mini{flex:0 0 auto;width:64px;}
+.goal-info{flex:1;min-width:0;}
+.goal-info h3{margin:0 0 3px;font-size:1.05rem;color:var(--ink);word-break:break-word;}
+.goal-tag{
+  display:inline-block;padding:2px 9px;border-radius:10px;font-size:.66rem;background:var(--surface-2);
+  color:var(--ink-soft);border:1px solid var(--border-soft);margin-top:2px;
+}
+.goal-amounts{margin-top:10px;display:flex;justify-content:space-between;align-items:baseline;}
+.goal-amounts .cur{font-family:'Shippori Mincho',serif;font-weight:700;color:var(--shu);font-size:1.05rem;}
+[data-theme="dark"] .goal-amounts .cur{color:var(--gold);}
+.goal-amounts .tgt{font-size:.72rem;color:var(--ink-soft);}
+.progress-track{height:9px;border-radius:6px;background:var(--surface-2);margin-top:8px;overflow:hidden;border:1px solid var(--border-soft);}
+.progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--moss),var(--gold));width:0%;transition:width .8s cubic-bezier(.2,.8,.2,1);position:relative;}
+.progress-pct{font-size:.68rem;color:var(--ink-soft);margin-top:4px;text-align:right;}
+.goal-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+.goal-actions button{
+  flex:1;min-width:60px;padding:7px 8px;border-radius:12px;border:1px solid var(--border);background:var(--surface-2);
+  color:var(--ink);font-size:.72rem;transition:.15s;display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.goal-actions button:hover{background:var(--gold-soft);border-color:var(--gold);}
+.goal-actions button.iconly{flex:0 0 auto;width:34px;}
+
+/* big achievement stamp (hanko) */
+.card-stamp{
+  position:absolute;top:52%;left:50%;transform:translate(-50%,-50%) rotate(-13deg);
+  width:112px;height:112px;border-radius:50%;border:4px solid var(--shu);color:var(--shu);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;z-index:5;mix-blend-mode:multiply;opacity:.88;
+  background:radial-gradient(circle, rgba(178,58,46,.04), transparent 70%);
+}
+[data-theme="dark"] .card-stamp{mix-blend-mode:normal;opacity:.92;border-color:var(--shu);color:var(--shu);}
+.card-stamp .big{font-family:'Shippori Mincho',serif;font-weight:800;font-size:1.9rem;line-height:1;}
+.card-stamp .small{font-size:.56rem;letter-spacing:.16em;margin-top:3px;}
+
+/* pagination */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin:16px auto 0;flex-wrap:wrap;max-width:1100px;padding:0 22px;}
+.pagination button{min-width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--ink);font-size:.8rem;transition:.15s;}
+.pagination button:hover:not(:disabled):not(.active){background:var(--surface-2);}
+.pagination button.active{background:var(--indigo);color:#fff;border-color:var(--indigo);}
+.pagination button:disabled{opacity:.35;cursor:default;}
+
+/* history list */
+.history-list{max-height:340px;overflow-y:auto;margin-top:4px;}
+.history-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-soft);}
+.history-item:last-child{border-bottom:none;}
+.history-item .h-left{min-width:0;}
+.history-item .h-note{font-size:.82rem;color:var(--ink);word-break:break-word;}
+.history-item .h-date{font-size:.68rem;color:var(--ink-soft);margin-top:2px;}
+.history-item .h-amt{font-family:'Shippori Mincho',serif;font-weight:700;color:var(--shu);white-space:nowrap;}
+[data-theme="dark"] .history-item .h-amt{color:var(--gold);}
+.history-empty{text-align:center;color:var(--ink-soft);font-size:.82rem;padding:24px 0;}
+.history-summary{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-soft);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border-soft);}
+
+/* countdown */
+.countdown-wrap{margin-top:10px;}
+.countdown-date{font-size:.68rem;color:var(--ink-soft);text-align:center;margin-bottom:6px;letter-spacing:.02em;}
+.countdown-date .kanji-tag{color:var(--shu);font-weight:700;}
+[data-theme="dark"] .countdown-date .kanji-tag{color:var(--gold);}
+.countdown{display:flex;gap:4px;align-items:stretch;justify-content:center;}
+.cd-box{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:5px 4px;min-width:38px;
+  text-align:center;perspective:200px;
+}
+.cd-num{
+  display:block;font-family:'Shippori Mincho',serif;font-weight:700;font-size:1rem;color:var(--indigo);
+  transform-origin:50% 50%;
+}
+[data-theme="dark"] .cd-num{color:var(--indigo-soft);}
+.cd-lbl{display:block;font-size:.52rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+.cd-sep{color:var(--ink-faint);font-weight:700;align-self:center;font-size:.9rem;}
+.cd-num.tick{animation:cdTick .35s cubic-bezier(.3,.8,.3,1);}
+@keyframes cdTick{0%{transform:rotateX(70deg);opacity:.25;}100%{transform:rotateX(0deg);opacity:1;}}
+.countdown.expired .cd-box{border-color:var(--shu);}
+.countdown.expired .cd-num{color:var(--shu);}
+.countdown-expired-label{text-align:center;font-size:.72rem;color:var(--shu);font-weight:700;margin-top:4px;}
+
+.empty-state{
+  grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--ink-soft);
+}
+.empty-state .kanji{font-family:'Shippori Mincho',serif;font-size:2.6rem;color:var(--gold-soft);}
+
+/* ---------- motivation area ---------- */
+.motivation-area{
+  max-width:640px;margin:34px auto 10px;padding:0 22px;
+}
+.motivation-area.motivation-top{margin:20px auto 6px;}
+.motiv-card{
+  position:relative;background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:30px 26px;box-shadow:var(--shadow);min-height:150px;display:flex;flex-direction:column;justify-content:center;
+  text-align:center;overflow:hidden;
+}
+.motiv-card::after{
+  content:"和";position:absolute;right:10px;bottom:-14px;font-family:'Shippori Mincho',serif;
+  font-size:6rem;color:var(--gold-soft);opacity:.18;pointer-events:none;
+}
+.motiv-cat{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--indigo);font-weight:700;margin-bottom:10px;}
+[data-theme="dark"] .motiv-cat{color:var(--indigo-soft);}
+.motiv-text{font-family:'Shippori Mincho',serif;font-size:1.12rem;line-height:1.6;color:var(--ink);min-height:70px;
+  display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .35s ease;}
+.motiv-text.show{opacity:1;}
+.motiv-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:16px;}
+.motiv-nav button{
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--ink);
+  font-size:1rem;transition:.2s;
+}
+.motiv-nav button:hover{background:var(--indigo);color:#fff;}
+.motiv-count{font-size:.72rem;color:var(--ink-soft);min-width:70px;text-align:center;}
+.motiv-auto{font-size:.7rem;color:var(--ink-soft);display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px;}
+.motiv-auto input{accent-color:var(--indigo);}
+
+footer.app-footer{text-align:center;color:var(--ink-faint);font-size:.72rem;margin-top:40px;padding:0 20px;}
+
+/* ---------- modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(20,16,12,.55);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:16px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--surface);border-radius:20px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;
+  padding:26px 24px;box-shadow:0 30px 60px rgba(0,0,0,.35);position:relative;
+  animation:modalIn .3s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(.97);}to{opacity:1;transform:none;}}
+.modal-box h2{margin:0 0 4px;font-size:1.2rem;color:var(--indigo-deep);}
+[data-theme="dark"] .modal-box h2{color:var(--gold-soft);}
+.modal-sub{font-size:.78rem;color:var(--ink-soft);margin-bottom:16px;}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;border:none;background:var(--surface-2);color:var(--ink);font-size:.95rem;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:.76rem;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
+.field input[type=text],.field input[type=number],.field input[type=date],.field select,.field textarea{
+  width:100%;padding:10px 12px;border-radius:11px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink);
+  font-size:.88rem;outline:none;transition:.2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--indigo-soft);}
+.field textarea{resize:vertical;min-height:60px;}
+.swatches{display:flex;gap:8px;flex-wrap:wrap;}
+.swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;}
+.swatch.sel{border-color:var(--ink);transform:scale(1.15);}
+.modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+.settings-section{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border-soft);}
+.settings-section:last-child{border-bottom:none;}
+.settings-section h3{margin:0 0 8px;font-size:.9rem;color:var(--indigo);}
+[data-theme="dark"] .settings-section h3{color:var(--indigo-soft);}
+.settings-row{display:flex;gap:8px;flex-wrap:wrap;}
+.file-hidden{display:none;}
+
+/* ---------- celebration overlay ---------- */
+.celebrate-overlay{
+  position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(20,16,12,.6);
+}
+.celebrate-overlay.open{display:flex;}
+.celebrate-box{
+  background:var(--surface);border-radius:22px;padding:40px 30px;text-align:center;max-width:340px;
+  box-shadow:0 30px 80px rgba(0,0,0,.4);position:relative;overflow:hidden;
+  animation:popIn .5s cubic-bezier(.2,.9,.3,1.3);
+}
+@keyframes popIn{0%{transform:scale(.5);opacity:0;}100%{transform:scale(1);opacity:1;}}
+.celebrate-box h2{font-size:1.5rem;color:var(--shu);margin:10px 0 6px;}
+[data-theme="dark"] .celebrate-box h2{color:var(--gold);}
+.celebrate-box p{color:var(--ink-soft);font-size:.86rem;margin:0 0 16px;}
+.celebrate-kanji{font-family:'Shippori Mincho',serif;font-size:3rem;color:var(--gold);}
+#confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:199;}
+
+/* toast */
+#toast-container{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;}
+.toast{
+  background:var(--indigo-deep);color:#fff;padding:10px 18px;border-radius:20px;font-size:.82rem;
+  box-shadow:0 8px 20px rgba(0,0,0,.25);animation:toastIn .3s ease;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+/* coin fly animation */
+.flying-coin{
+  position:fixed;width:22px;height:22px;border-radius:50%;z-index:250;pointer-events:none;
+  background:radial-gradient(circle at 35% 30%, var(--gold-soft), var(--gold) 60%, var(--gold-deep));
+  box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
+
+@media print{
+  .topbar,.controls-bar,.hero,.motivation-area,footer,.goal-actions,.modal-overlay,#toast-container,.pin-seal{display:none !important;}
+  body{background:#fff;}
+  .goals-grid{display:block;}
+  .goal-card{box-shadow:none;border:1px solid #999;margin-bottom:12px;break-inside:avoid;}
+}
+
+@media (max-width:640px){
+  .hero{gap:20px;}
+  .search-wrap input{width:120px;}
+  .search-wrap input:focus{width:150px;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 100 100"><path d="M10 30 L90 30 M20 30 L20 15 M80 30 L80 15 M15 15 L85 15" stroke="var(--indigo)" stroke-width="6" fill="none" stroke-linecap="round"/></svg>
+    <h1>積立 Tsumitate<small>toples impianmu</small></h1>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="ic">🔍</span>
+      <input type="text" id="searchInput" placeholder="Cari celengan atau tag...">
+    </div>
+    <button class="icon-btn" id="themeToggle" title="Ganti tema">🌙</button>
+    <button class="icon-btn" id="settingsBtn" title="Pengaturan">⚙️</button>
+  </div>
+</header>
+
+<section class="motivation-area motivation-top">
+  <div class="motiv-card">
+    <div class="motiv-cat" id="motivCat">Petuah</div>
+    <div class="motiv-text" id="motivText">Memuat...</div>
+    <div class="motiv-nav">
+      <button id="motivBack">←</button>
+      <div class="motiv-count" id="motivCount">1 / 250</div>
+      <button id="motivNext">→</button>
+    </div>
+    <label class="motiv-auto"><input type="checkbox" id="motivAuto"> Putar otomatis setiap 6 detik</label>
+  </div>
+</section>
+
+<section class="hero">
+  <div class="hero-jar" id="heroJarWrap"></div>
+  <div class="hero-text">
+    <h2>Setiap koin, satu langkah lebih dekat</h2>
+    <p>Kumpulkan tabunganmu perlahan seperti mengisi toples kaca — sedikit demi sedikit, lama-lama menjadi bukit.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num" id="statTotal">Rp0</div><div class="lbl">Total tersimpan</div></div>
+      <div class="hero-stat"><div class="num" id="statGoals">0</div><div class="lbl">Celengan aktif</div></div>
+      <div class="hero-stat"><div class="num" id="statDone">0</div><div class="lbl">Target tercapai</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="seigaiha"></div>
+
+<section class="controls-bar">
+  <div class="filters" id="tagFilters">
+    <span class="chip active" data-tag="__all">Semua</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <select class="sortsel" id="sortSelect">
+      <option value="pinned">Urutkan: Pin dulu</option>
+      <option value="newest">Terbaru</option>
+      <option value="oldest">Terlama</option>
+      <option value="progress-desc">Progres tertinggi</option>
+      <option value="progress-asc">Progres terendah</option>
+      <option value="amount-desc">Nominal terbesar</option>
+      <option value="name">Nama A–Z</option>
+    </select>
+    <button class="btn" id="addGoalBtn">＋ Celengan Baru</button>
+  </div>
+</section>
+
+<section class="goals-grid" id="goalsGrid"></section>
+<div class="pagination" id="goalsPagination"></div>
+
+<footer class="app-footer">手作り with 心 — dibuat untuk menemani perjalanan menabungmu ✨</footer>
+
+
+<!-- ============ MODAL: Add/Edit Goal ============ -->
+<div class="modal-overlay" id="goalModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close>✕</button>
+    <h2 id="goalModalTitle">Celengan Baru</h2>
+    <div class="modal-sub">Tentukan tujuan menabungmu — beri nama, target, dan warna favoritmu.</div>
+    <input type="hidden" id="goalId">
+    <div class="field">
+      <label>Menabung untuk apa?</label>
+      <input type="text" id="goalName" placeholder="Contoh: Liburan ke Kyoto">
+    </div>
+    <div class="field">
+      <label>Target tabungan (Rp)</label>
+      <input type="number" id="goalTarget" placeholder="5000000" min="0">
+    </div>
+    <div class="field">
+      <label>Sudah punya tabungan awal? (opsional)</label>
+      <input type="number" id="goalStart" placeholder="0" min="0">
+    </div>
+    <div class="field">
+      <label>Target tanggal (opsional)</label>
+      <input type="date" id="goalDeadline">
+    </div>
+    <div class="field">
+      <label>Tag / kategori</label>
+      <input type="text" id="goalTag" placeholder="Impian, Darurat, Gadget, dsb.">
+    </div>
+    <div class="field">
+      <label>Warna celengan</label>
+      <div class="swatches" id="goalSwatches"></div>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="goalPin" style="width:auto;margin-right:6px;"> Pin celengan ini ke atas</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close>Batal</button>
+      <button class="btn" id="saveGoalBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Deposit ============ -->
+<div class="modal-overlay" id="depositModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close>✕</button>
+    <h2>Setor Tabungan</h2>
+    <div class="modal-sub" id="depositSub">Masukkan jumlah yang ingin kamu tabung.</div>
+    <input type="hidden" id="depositGoalId">
+    <div class="field">
+      <label>Jumlah (Rp)</label>
+      <input type="number" id="depositAmount" placeholder="50000" min="1">
+    </div>
+    <div class="field">
+      <label>Catatan (opsional)</label>
+      <input type="text" id="depositNote" placeholder="Uang jajan hari ini">
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close>Batal</button>
+      <button class="btn" id="saveDepositBtn">Tabung Sekarang</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Settings ============ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close>✕</button>
+    <h2>Pengaturan</h2>
+    <div class="modal-sub">Kelola data, tampilan, dan cadangan tabunganmu.</div>
+
+    <div class="settings-section">
+      <h3>Tampilan</h3>
+      <div class="settings-row">
+        <button class="btn ghost small" id="setLight">☀️ Mode Terang</button>
+        <button class="btn ghost small" id="setDark">🌙 Mode Gelap</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Cadangan Data (Backup &amp; Restore)</h3>
+      <div class="settings-row">
+        <button class="btn secondary small" id="backupBtn">⬇️ Backup (Unduh JSON)</button>
+        <button class="btn ghost small" id="restoreBtn">⬆️ Restore dari File</button>
+        <input type="file" id="restoreFile" class="file-hidden" accept="application/json">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Cetak</h3>
+      <div class="settings-row">
+        <button class="btn ghost small" id="printBtn">🖨️ Cetak / Simpan PDF</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Zona Berbahaya</h3>
+      <div class="settings-row">
+        <button class="btn danger small" id="resetBtn">🗑️ Reset Semua Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: History ============ -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-box">
+    <button class="modal-close" data-close>✕</button>
+    <h2 id="historyTitle">Riwayat Setoran</h2>
+    <div class="modal-sub" id="historySub">Semua setoran untuk celengan ini.</div>
+    <div class="history-summary" id="historySummary"></div>
+    <div class="history-list" id="historyList"></div>
+    <div class="pagination" id="historyPagination"></div>
+  </div>
+</div>
+
+<!-- ============ MODAL: Confirm ============ -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box" style="max-width:340px;">
+    <h2 id="confirmTitle">Yakin?</h2>
+    <div class="modal-sub" id="confirmText">Tindakan ini tidak bisa dibatalkan.</div>
+    <div class="modal-actions">
+      <button class="btn ghost" data-close>Batal</button>
+      <button class="btn danger" id="confirmYes">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CELEBRATION ============ -->
+<div class="celebrate-overlay" id="celebrateOverlay">
+  <div class="celebrate-box">
+    <div class="celebrate-kanji">祝</div>
+    <h2>Target Tercapai!</h2>
+    <p id="celebrateText">Selamat, celenganmu sudah penuh sesuai target 🎉</p>
+    <button class="btn" id="celebrateClose">Horeee!</button>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+$(function(){
+
+/* ================= DATA & STORAGE ================= */
+const STORE_KEY = 'tsumitate_goals_v1';
+const THEME_KEY = 'tsumitate_theme_v1';
+const COLORS = ['#B23A2E','#28495E','#B9903D','#6B7A54','#8A6B9E','#3C7A89'];
+
+function loadGoals(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; }
+}
+function saveGoals(){ localStorage.setItem(STORE_KEY, JSON.stringify(goals)); }
+function uid(){ return 'g_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function fmtRp(n){
+  n = Math.round(n||0);
+  return 'Rp'+n.toLocaleString('id-ID');
+}
+
+let goals = loadGoals();
+let activeTag = '__all';
+let searchTerm = '';
+
+/* ================= THEME ================= */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  $('#themeToggle').text(t==='dark' ? '☀️' : '🌙');
+  localStorage.setItem(THEME_KEY, t);
+}
+applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+$('#themeToggle').on('click', function(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  applyTheme(cur==='dark' ? 'light' : 'dark');
+});
+$('#setLight').on('click', ()=>applyTheme('light'));
+$('#setDark').on('click', ()=>applyTheme('dark'));
+
+/* ================= JAR SVG GENERATOR ================= */
+function jarSVG(idSuffix, pct, size){
+  pct = Math.max(0, Math.min(100, pct));
+  const w = size || 100, h = w*1.15;
+  const clipId = 'clip_'+idSuffix, patId = 'pat_'+idSuffix, gradId = 'grad_'+idSuffix;
+  // jar interior box (approx) within viewbox 0 0 100 115
+  const innerX=18, innerY=26, innerW=64, innerH=78;
+  const fillH = innerH * (pct/100);
+  const fillY = innerY + innerH - fillH;
+  return `
+  <svg viewBox="0 0 100 115" width="${w}" height="${h}" class="jar-svg">
+    <defs>
+      <clipPath id="${clipId}">
+        <path d="M20 26 Q18 28 18 34 L18 96 Q18 102 26 102 L74 102 Q82 102 82 96 L82 34 Q82 28 80 26 Z"/>
+      </clipPath>
+      <pattern id="${patId}" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(6)">
+        <circle cx="4" cy="4" r="3.4" fill="var(--gold)" opacity="0.9"/>
+        <circle cx="12" cy="11" r="3" fill="var(--gold-deep)" opacity="0.85"/>
+      </pattern>
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--gold-soft)"/>
+        <stop offset="100%" stop-color="var(--gold-deep)"/>
+      </linearGradient>
+    </defs>
+    <!-- jar body outline -->
+    <path d="M20 26 Q18 28 18 34 L18 96 Q18 102 26 102 L74 102 Q82 102 82 96 L82 34 Q82 28 80 26 Z"
+      fill="var(--surface)" stroke="var(--ink-faint)" stroke-width="1.6" opacity="0.5"/>
+    <!-- coin fill -->
+    <g clip-path="url(#${clipId})">
+      ${pct>0 ? `<rect x="18" y="${fillY.toFixed(1)}" width="64" height="${(fillH+6).toFixed(1)}" fill="url(#${gradId})"/>
+      <rect x="18" y="${fillY.toFixed(1)}" width="64" height="${(fillH+6).toFixed(1)}" fill="url(#${patId})" opacity="0.55"/>
+      <path class="jar-wave" d="M18 ${fillY.toFixed(1)} Q 30 ${(fillY-3).toFixed(1)} 50 ${fillY.toFixed(1)} T 82 ${fillY.toFixed(1)} V ${(fillY+4).toFixed(1)} H18 Z" fill="var(--gold-soft)" opacity="0.8">
+        <animateTransform attributeName="transform" type="translate" values="-14 0;0 0;-14 0" dur="3.2s" repeatCount="indefinite"/>
+      </path>` : ''}
+    </g>
+    <!-- jar outline (top) -->
+    <path d="M20 26 Q18 28 18 34 L18 96 Q18 102 26 102 L74 102 Q82 102 82 96 L82 34 Q82 28 80 26 Z"
+      fill="none" stroke="var(--ink)" stroke-width="2" opacity="0.55"/>
+    <!-- neck + lid -->
+    <rect x="28" y="8" width="44" height="14" rx="3" fill="none" stroke="var(--ink)" stroke-width="2" opacity="0.55"/>
+    <path d="M24 22 L76 22 L80 26 L20 26 Z" fill="none" stroke="var(--ink)" stroke-width="2" opacity="0.55"/>
+    <rect x="26" y="6" width="48" height="6" rx="3" fill="var(--indigo)" opacity="0.75"/>
+  </svg>`;
+}
+
+function renderHeroJar(){
+  const totalSaved = goals.reduce((s,g)=>s+g.current,0);
+  const totalTarget = goals.reduce((s,g)=>s+g.target,0) || 1;
+  const pct = goals.length ? Math.min(100,(totalSaved/totalTarget)*100) : 0;
+  $('#heroJarWrap').html(jarSVG('hero', pct, 180));
+}
+
+/* ================= RENDER GOALS ================= */
+function getTags(){
+  const set = new Set();
+  goals.forEach(g=>{ if(g.tag) set.add(g.tag); });
+  return Array.from(set);
+}
+
+function renderTagFilters(){
+  const tags = getTags();
+  let html = `<span class="chip ${activeTag==='__all'?'active':''}" data-tag="__all">Semua</span>`;
+  tags.forEach(t=>{
+    html += `<span class="chip ${activeTag===t?'active':''}" data-tag="${escAttr(t)}">${escHtml(t)}</span>`;
+  });
+  $('#tagFilters').html(html);
+}
+
+function escHtml(s){ return $('<div>').text(s==null?'':s).html(); }
+function escAttr(s){ return escHtml(s); }
+
+function sortedFilteredGoals(){
+  let list = goals.slice();
+  if(activeTag !== '__all') list = list.filter(g=>g.tag===activeTag);
+  if(searchTerm){
+    const q = searchTerm.toLowerCase();
+    list = list.filter(g=> g.name.toLowerCase().includes(q) || (g.tag||'').toLowerCase().includes(q));
+  }
+  const mode = $('#sortSelect').val();
+  switch(mode){
+    case 'newest': list.sort((a,b)=>b.createdAt-a.createdAt); break;
+    case 'oldest': list.sort((a,b)=>a.createdAt-b.createdAt); break;
+    case 'progress-desc': list.sort((a,b)=> pctOf(b)-pctOf(a)); break;
+    case 'progress-asc': list.sort((a,b)=> pctOf(a)-pctOf(b)); break;
+    case 'amount-desc': list.sort((a,b)=> b.current-a.current); break;
+    case 'name': list.sort((a,b)=> a.name.localeCompare(b.name)); break;
+    default: list.sort((a,b)=> (b.pinned - a.pinned) || (b.createdAt-a.createdAt));
+  }
+  return list;
+}
+function pctOf(g){ return g.target>0 ? Math.min(100,(g.current/g.target)*100) : 0; }
+
+/* ---- countdown to target date ---- */
+function fmtTargetDate(ts){
+  return new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+}
+function countdownMarkup(g, reached){
+  if(!g.deadline) return '';
+  const label = reached ? 'Target sudah tercapai' : `Target: <span class="kanji-tag">${fmtTargetDate(g.deadline)}</span>`;
+  return `
+  <div class="countdown-wrap">
+    <div class="countdown-date">🎯 ${label}</div>
+    <div class="countdown" data-deadline="${g.deadline}" data-id="${g.id}">
+      <div class="cd-box"><span class="cd-num" data-unit="d">00</span><span class="cd-lbl">Hari</span></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-box"><span class="cd-num" data-unit="h">00</span><span class="cd-lbl">Jam</span></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-box"><span class="cd-num" data-unit="m">00</span><span class="cd-lbl">Menit</span></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-box"><span class="cd-num" data-unit="s">00</span><span class="cd-lbl">Detik</span></div>
+    </div>
+  </div>`;
+}
+
+let lastCountdownSeconds = {};
+function updateCountdowns(){
+  const now = Date.now();
+  $('.countdown[data-deadline]').each(function(){
+    const $cd = $(this);
+    const deadline = parseInt($cd.data('deadline'));
+    const id = $cd.data('id');
+    let diff = deadline - now;
+    const expired = diff <= 0;
+    $cd.toggleClass('expired', expired);
+    if(expired) diff = 0;
+    const d = Math.floor(diff/86400000);
+    const h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    const vals = {d,h,m,s};
+    const prevS = lastCountdownSeconds[id];
+    Object.keys(vals).forEach(unit=>{
+      const $num = $cd.find(`.cd-num[data-unit="${unit}"]`);
+      const txt = String(vals[unit]).padStart(2,'0');
+      if($num.text() !== txt){
+        $num.text(txt);
+        if(unit==='s'){ $num.addClass('tick'); setTimeout(()=>$num.removeClass('tick'), 350); }
+      }
+    });
+    lastCountdownSeconds[id] = s;
+    if(expired && !$cd.parent().find('.countdown-expired-label').length){
+      $cd.after('<div class="countdown-expired-label">⏰ Waktu tenggat sudah lewat</div>');
+    }
+  });
+}
+setInterval(updateCountdowns, 1000);
+
+
+const GOALS_PAGE_SIZE = 15;
+let goalsPage = 1;
+let totalGoalPages = 1;
+
+function renderGoals(){
+  const fullList = sortedFilteredGoals();
+  totalGoalPages = Math.max(1, Math.ceil(fullList.length / GOALS_PAGE_SIZE));
+  if(goalsPage > totalGoalPages) goalsPage = totalGoalPages;
+  if(goalsPage < 1) goalsPage = 1;
+  const list = fullList.slice((goalsPage-1)*GOALS_PAGE_SIZE, goalsPage*GOALS_PAGE_SIZE);
+  if(!fullList.length){
+    $('#goalsGrid').html(`<div class="empty-state"><div class="kanji">空</div><p>Belum ada celengan. Mulai dengan menekan tombol "＋ Celengan Baru".</p></div>`);
+  } else {
+    let html = '';
+    list.forEach((g,i)=>{
+      const pct = pctOf(g);
+      const reached = g.target>0 && g.current >= g.target;
+      html += `
+      <div class="goal-card ${g.pinned?'pinned':''}" data-id="${g.id}" style="animation-delay:${Math.min(i*0.04,0.4)}s">
+        ${g.pinned?'<div class="pin-seal">留</div>':''}
+        ${reached?'<div class="card-stamp"><span class="big">達成</span><span class="small">TERCAPAI</span></div>':''}
+        <div class="goal-top">
+          <div class="goal-jar-mini">${jarSVG(g.id, pct, 64)}</div>
+          <div class="goal-info">
+            <h3>${escHtml(g.name)}</h3>
+            ${g.tag?`<span class="goal-tag">${escHtml(g.tag)}</span>`:''}
+          </div>
+        </div>
+        <div class="goal-amounts">
+          <span class="cur">${fmtRp(g.current)}</span>
+          <span class="tgt">/ ${fmtRp(g.target)}</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg, ${g.color}, var(--gold))"></div></div>
+        <div class="progress-pct">${pct.toFixed(1)}% ${reached?'✅ tercapai':''}</div>
+        ${countdownMarkup(g, reached)}
+        <div class="goal-actions">
+          <button class="depositBtn" data-id="${g.id}">💰 Setor</button>
+          <button class="historyBtn iconly" data-id="${g.id}" title="Riwayat setoran">📜</button>
+          <button class="pinBtn iconly" data-id="${g.id}" title="Pin">${g.pinned?'📌':'📍'}</button>
+          <button class="editBtn iconly" data-id="${g.id}" title="Edit">✏️</button>
+          <button class="delBtn iconly" data-id="${g.id}" title="Hapus">🗑️</button>
+        </div>
+      </div>`;
+    });
+    $('#goalsGrid').html(html);
+    updateCountdowns();
+  }
+  renderTagFilters();
+  renderStats();
+  renderHeroJar();
+  renderPagination('#goalsPagination', goalsPage, totalGoalPages, function(p){ goalsPage = p; renderGoals(); });
+}
+
+/* generic pagination renderer */
+function renderPagination(containerSel, current, totalPages, onClick){
+  const $c = $(containerSel);
+  if(!$c.length) return;
+  if(totalPages <= 1){ $c.empty(); return; }
+  let html = `<button data-p="${current-1}" ${current<=1?'disabled':''}>‹</button>`;
+  for(let p=1;p<=totalPages;p++){
+    html += `<button data-p="${p}" class="${p===current?'active':''}">${p}</button>`;
+  }
+  html += `<button data-p="${current+1}" ${current>=totalPages?'disabled':''}>›</button>`;
+  $c.html(html);
+  $c.off('click').on('click', 'button', function(){
+    const p = parseInt($(this).data('p'));
+    if(!isNaN(p) && p>=1 && p<=totalPages) onClick(p);
+  });
+}
+
+function renderStats(){
+  const total = goals.reduce((s,g)=>s+g.current,0);
+  const done = goals.filter(g=> g.target>0 && g.current>=g.target).length;
+  $('#statTotal').text(fmtRp(total));
+  $('#statGoals').text(goals.length);
+  $('#statDone').text(done);
+}
+
+/* ================= TOAST ================= */
+function toast(msg){
+  const $t = $(`<div class="toast">${escHtml(msg)}</div>`);
+  $('#toast-container').append($t);
+  setTimeout(()=>{ $t.fadeOut(300, ()=>$t.remove()); }, 2400);
+}
+
+/* ================= MODALS ================= */
+function openModal(id){ $('#'+id).addClass('open'); }
+function closeModal(id){ $('#'+id).removeClass('open'); }
+$('[data-close]').on('click', function(){ $(this).closest('.modal-overlay').removeClass('open'); });
+$('.modal-overlay').on('click', function(e){ if(e.target===this) $(this).removeClass('open'); });
+
+/* ---- Add/Edit Goal modal ---- */
+function buildSwatches(selected){
+  let html='';
+  COLORS.forEach(c=>{
+    html += `<span class="swatch ${c===selected?'sel':''}" style="background:${c}" data-color="${c}"></span>`;
+  });
+  $('#goalSwatches').html(html);
+}
+$(document).on('click', '.swatch', function(){
+  $('.swatch').removeClass('sel'); $(this).addClass('sel');
+});
+
+$('#addGoalBtn').on('click', function(){
+  $('#goalModalTitle').text('Celengan Baru');
+  $('#goalId').val('');
+  $('#goalName').val(''); $('#goalTarget').val(''); $('#goalStart').val(''); $('#goalTag').val(''); $('#goalDeadline').val('');
+  $('#goalPin').prop('checked', false);
+  buildSwatches(COLORS[Math.floor(Math.random()*COLORS.length)]);
+  openModal('goalModal');
+});
+
+$(document).on('click', '.editBtn', function(){
+  const g = goals.find(x=>x.id===$(this).data('id'));
+  if(!g) return;
+  $('#goalModalTitle').text('Edit Celengan');
+  $('#goalId').val(g.id);
+  $('#goalName').val(g.name);
+  $('#goalTarget').val(g.target);
+  $('#goalStart').val('');
+  $('#goalTag').val(g.tag||'');
+  $('#goalDeadline').val(g.deadline ? new Date(g.deadline).toISOString().slice(0,10) : '');
+  $('#goalPin').prop('checked', g.pinned);
+  buildSwatches(g.color);
+  openModal('goalModal');
+});
+
+$('#saveGoalBtn').on('click', function(){
+  const name = $('#goalName').val().trim();
+  const target = parseFloat($('#goalTarget').val())||0;
+  const start = parseFloat($('#goalStart').val())||0;
+  const tag = $('#goalTag').val().trim();
+  const deadlineVal = $('#goalDeadline').val();
+  const deadline = deadlineVal ? new Date(deadlineVal+'T23:59:59').getTime() : null;
+  const pinned = $('#goalPin').is(':checked');
+  const color = $('.swatch.sel').data('color') || COLORS[0];
+  const id = $('#goalId').val();
+
+  if(!name){ toast('Nama celengan tidak boleh kosong'); return; }
+
+  if(id){
+    const g = goals.find(x=>x.id===id);
+    if(g){ g.name=name; g.target=target; g.tag=tag; g.pinned=pinned; g.color=color; g.deadline=deadline; }
+    toast('Celengan diperbarui');
+  } else {
+    goals.push({
+      id: uid(), name, target, current: start, tag, pinned, color, deadline,
+      createdAt: Date.now(), history: start>0 ? [{amount:start, note:'Saldo awal', date:Date.now()}] : []
+    });
+    toast('Celengan baru dibuat 🎉');
+  }
+  saveGoals(); renderGoals(); closeModal('goalModal');
+});
+
+/* ---- Deposit modal ---- */
+$(document).on('click', '.depositBtn', function(){
+  const id = $(this).data('id');
+  const g = goals.find(x=>x.id===id);
+  if(!g) return;
+  $('#depositGoalId').val(id);
+  $('#depositSub').text(`Menabung untuk "${g.name}"`);
+  $('#depositAmount').val(''); $('#depositNote').val('');
+  openModal('depositModal');
+  setTimeout(()=>$('#depositAmount').focus(), 150);
+});
+
+$('#saveDepositBtn').on('click', function(){
+  const id = $('#depositGoalId').val();
+  const amount = parseFloat($('#depositAmount').val());
+  const note = $('#depositNote').val().trim();
+  const g = goals.find(x=>x.id===id);
+  if(!g) return;
+  if(!amount || amount<=0){ toast('Masukkan jumlah yang valid'); return; }
+
+  const wasReached = g.target>0 && g.current >= g.target;
+  g.current += amount;
+  g.history = g.history||[];
+  g.history.push({amount, note, date:Date.now()});
+  saveGoals();
+
+  closeModal('depositModal');
+  flyCoinsToCard(id, ()=>{
+    renderGoals();
+    toast(`+${fmtRp(amount)} ditabung ke "${g.name}"`);
+    const nowReached = g.target>0 && g.current >= g.target;
+    if(nowReached && !wasReached){
+      setTimeout(()=> celebrate(g), 400);
+    }
+  });
+});
+
+/* coin fly animation from button to jar */
+function flyCoinsToCard(goalId, done){
+  const $card = $(`.goal-card[data-id="${goalId}"]`);
+  const targetOffset = $card.length ? $card.find('.goal-jar-mini').offset() : null;
+  if(!targetOffset){ done(); return; }
+  const tx = targetOffset.left + 20, ty = targetOffset.top + 20;
+  const startX = window.innerWidth/2, startY = window.innerHeight/2;
+  let remaining = 6;
+  for(let i=0;i<6;i++){
+    setTimeout(()=>{
+      const $coin = $('<div class="flying-coin"></div>').css({left:startX+(Math.random()*30-15), top:startY+(Math.random()*30-15)});
+      $('body').append($coin);
+      $coin.animate({left:tx, top:ty, opacity:0.2}, {
+        duration:650, easing:'swing',
+        step:function(now, fx){ if(fx.prop==='left'){ $(this).css('transform','rotate('+(now*2)+'deg)'); } },
+        complete:function(){ $(this).remove(); remaining--; if(remaining<=0) done(); }
+      });
+    }, i*70);
+  }
+  setTimeout(()=>{ if(remaining>0){ } }, 900); // safety noop
+  setTimeout(done, 900); // ensure UI updates even if something goes off
+}
+
+/* ---- History ---- */
+const HISTORY_PAGE_SIZE = 15;
+let historyGoalId = null;
+let historyPage = 1;
+
+$(document).on('click', '.historyBtn', function(){
+  historyGoalId = $(this).data('id');
+  historyPage = 1;
+  renderHistory();
+  openModal('historyModal');
+});
+
+function renderHistory(){
+  const g = goals.find(x=>x.id===historyGoalId);
+  if(!g) return;
+  $('#historyTitle').text('Riwayat Setoran');
+  $('#historySub').text(`Semua setoran untuk "${g.name}"`);
+
+  const hist = (g.history||[]).slice().sort((a,b)=>b.date-a.date);
+  $('#historySummary').html(`
+    <span>${hist.length} setoran tercatat</span>
+    <span>Total: <strong>${fmtRp(g.current)}</strong></span>
+  `);
+
+  const totalPages = Math.max(1, Math.ceil(hist.length / HISTORY_PAGE_SIZE));
+  if(historyPage > totalPages) historyPage = totalPages;
+  if(historyPage < 1) historyPage = 1;
+  const pageItems = hist.slice((historyPage-1)*HISTORY_PAGE_SIZE, historyPage*HISTORY_PAGE_SIZE);
+
+  if(!hist.length){
+    $('#historyList').html('<div class="history-empty">Belum ada setoran tercatat.</div>');
+  } else {
+    let html = '';
+    pageItems.forEach(h=>{
+      const d = new Date(h.date);
+      const dateStr = d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) + ' · ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      html += `
+      <div class="history-item">
+        <div class="h-left">
+          <div class="h-note">${escHtml(h.note) || 'Setoran tabungan'}</div>
+          <div class="h-date">${dateStr}</div>
+        </div>
+        <div class="h-amt">+${fmtRp(h.amount)}</div>
+      </div>`;
+    });
+    $('#historyList').html(html);
+  }
+  renderPagination('#historyPagination', historyPage, totalPages, function(p){ historyPage = p; renderHistory(); });
+}
+
+/* ---- Pin ---- */
+$(document).on('click', '.pinBtn', function(){
+  const g = goals.find(x=>x.id===$(this).data('id'));
+  if(!g) return;
+  g.pinned = !g.pinned; saveGoals(); renderGoals();
+  toast(g.pinned ? 'Celengan dipin' : 'Pin dilepas');
+});
+
+/* ---- Delete ---- */
+let pendingDeleteId = null;
+$(document).on('click', '.delBtn', function(){
+  pendingDeleteId = $(this).data('id');
+  const g = goals.find(x=>x.id===pendingDeleteId);
+  $('#confirmTitle').text('Hapus Celengan?');
+  $('#confirmText').text(`"${g?g.name:''}" akan dihapus permanen beserta riwayat setorannya.`);
+  openModal('confirmModal');
+});
+$('#confirmYes').on('click', function(){
+  if(pendingDeleteId){
+    goals = goals.filter(x=>x.id!==pendingDeleteId);
+    saveGoals(); renderGoals();
+    toast('Celengan dihapus');
+  }
+  pendingDeleteId = null;
+  closeModal('confirmModal');
+});
+
+/* ================= FILTER / SEARCH / SORT ================= */
+$(document).on('click', '.chip', function(){
+  activeTag = $(this).data('tag');
+  goalsPage = 1;
+  renderGoals();
+});
+$('#sortSelect').on('change', function(){ goalsPage = 1; renderGoals(); });
+$('#searchInput').on('input', function(){ searchTerm = $(this).val(); goalsPage = 1; renderGoals(); });
+
+/* ================= SETTINGS: backup / restore / reset / print ================= */
+$('#settingsBtn').on('click', ()=> openModal('settingsModal'));
+
+$('#backupBtn').on('click', function(){
+  const data = { goals, exportedAt: new Date().toISOString(), app:'tsumitate' };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `tsumitate-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Backup diunduh 📦');
+});
+
+$('#restoreBtn').on('click', ()=> $('#restoreFile').trigger('click'));
+$('#restoreFile').on('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      const incoming = Array.isArray(parsed) ? parsed : parsed.goals;
+      if(!Array.isArray(incoming)) throw new Error('format tidak valid');
+      goals = incoming;
+      saveGoals(); renderGoals();
+      toast('Data berhasil dipulihkan ✅');
+      closeModal('settingsModal');
+    }catch(err){
+      toast('Gagal memulihkan: file tidak valid');
+    }
+    $('#restoreFile').val('');
+  };
+  reader.readAsText(file);
+});
+
+$('#printBtn').on('click', function(){
+  // temporarily render all goals (ignore pagination) so the printed report is complete
+  const savedPage = goalsPage;
+  goalsPage = 1;
+  const fullList = sortedFilteredGoals();
+  const savedTotalPages = totalGoalPages;
+  totalGoalPages = 1;
+  const list = fullList;
+  let html = '';
+  list.forEach((g)=>{
+    const pct = pctOf(g);
+    const reached = g.target>0 && g.current >= g.target;
+    html += `
+    <div class="goal-card ${g.pinned?'pinned':''}" data-id="${g.id}">
+      ${reached?'<div class="card-stamp"><span class="big">達成</span><span class="small">TERCAPAI</span></div>':''}
+      <div class="goal-top">
+        <div class="goal-jar-mini">${jarSVG('print_'+g.id, pct, 64)}</div>
+        <div class="goal-info">
+          <h3>${escHtml(g.name)}</h3>
+          ${g.tag?`<span class="goal-tag">${escHtml(g.tag)}</span>`:''}
+        </div>
+      </div>
+      <div class="goal-amounts"><span class="cur">${fmtRp(g.current)}</span><span class="tgt">/ ${fmtRp(g.target)}</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg, ${g.color}, var(--gold))"></div></div>
+      <div class="progress-pct">${pct.toFixed(1)}% ${reached?'✅ tercapai':''}</div>
+      ${g.deadline?`<div class="countdown-date">🎯 Target tanggal: <span class="kanji-tag">${fmtTargetDate(g.deadline)}</span></div>`:''}
+    </div>`;
+  });
+  $('#goalsGrid').html(html || `<div class="empty-state"><p>Belum ada celengan.</p></div>`);
+  $('#goalsPagination').empty();
+  window.print();
+  goalsPage = savedPage;
+  totalGoalPages = savedTotalPages;
+  setTimeout(renderGoals, 300);
+});
+
+$('#resetBtn').on('click', function(){
+  $('#confirmTitle').text('Reset Semua Data?');
+  $('#confirmText').text('Semua celengan, riwayat, dan pengaturan tema akan dihapus permanen. Lanjutkan?');
+  pendingDeleteId = '__RESET__';
+  openModal('confirmModal');
+});
+// hook reset into confirm flow
+const originalConfirmHandler = $._data($('#confirmYes')[0], 'events');
+$('#confirmYes').off('click').on('click', function(){
+  if(pendingDeleteId === '__RESET__'){
+    goals = [];
+    localStorage.removeItem(STORE_KEY);
+    saveGoals();
+    renderGoals();
+    toast('Semua data telah direset');
+    closeModal('settingsModal');
+  } else if(pendingDeleteId){
+    goals = goals.filter(x=>x.id!==pendingDeleteId);
+    saveGoals(); renderGoals();
+    toast('Celengan dihapus');
+  }
+  pendingDeleteId = null;
+  closeModal('confirmModal');
+});
+
+/* ================= CELEBRATION ================= */
+function celebrate(g){
+  $('#celebrateText').text(`Selamat! "${g.name}" sudah mencapai target ${fmtRp(g.target)} 🎉`);
+  $('#celebrateOverlay').addClass('open');
+  launchConfetti();
+}
+$('#celebrateClose').on('click', ()=> $('#celebrateOverlay').removeClass('open'));
+
+/* simple confetti / hanabi canvas */
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+let particles = [];
+function launchConfetti(){
+  particles = [];
+  const colors = ['#B23A2E','#B9903D','#28495E','#E6C878','#6B7A54','#fff'];
+  for(let i=0;i<140;i++){
+    particles.push({
+      x: canvas.width/2 + (Math.random()*200-100),
+      y: canvas.height/2 + (Math.random()*100-50),
+      vx: (Math.random()*2-1)*8,
+      vy: (Math.random()*-1-2)*8,
+      size: Math.random()*6+3,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      vrot: Math.random()*10-5,
+      life: 100+Math.random()*40
+    });
+  }
+  requestAnimationFrame(animateConfetti);
+}
+function animateConfetti(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  let alive = false;
+  particles.forEach(p=>{
+    if(p.life<=0) return;
+    alive = true;
+    p.vy += 0.18; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life--;
+    ctx.save();
+    ctx.translate(p.x, p.y); ctx.rotate(p.rot*Math.PI/180);
+    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life/140);
+    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+    ctx.restore();
+  });
+  if(alive) requestAnimationFrame(animateConfetti);
+  else ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+/* ================= 250 MOTIVASI / TIPS / QUOTES / PSIKOLOGI ================= */
+const PETUAH = ["Sedikit demi sedikit, lama-lama menjadi bukit.","Jatuh tujuh kali, bangun delapan kali — nana korobi ya oki.","Air yang menetes terus-menerus dapat melubangi batu.","Kaizen: perbaikan kecil setiap hari mengalahkan lompatan besar yang jarang.","Mottainai — jangan sia-siakan apa yang masih bisa berguna.","Ganbatte! Teruslah berusaha meski hasil belum terlihat.","Bambu yang lentur tidak pernah patah diterjang angin.","Seribu langkah dimulai dari satu koin yang ditabung hari ini.","Ikigai bukan soal harta, tapi soal alasan bangun pagi dengan semangat.","Wabi-sabi mengajarkan: cukup itu sudah indah.","Rumput yang diinjak akan tumbuh lebih kuat.","Sungai besar berasal dari mata air yang kecil.","Pohon sakura mekar karena sabar melewati musim dingin.","Simpan seperti tupai menabung untuk musim salju.","Yang tergesa-gesa sering menumpahkan mangkuknya sendiri.","Ketekunan adalah jembatan menuju kelimpahan.","Kotak kecil, jika diisi setiap hari, akan menjadi peti harta.","Bushido keuangan: disiplin lebih berharga daripada keberuntungan.","Jangan menilai tabungan dari besar kecilnya setoran, tapi dari konsistensinya.","Seperti teh yang diseduh perlahan, kekayaan sejati butuh waktu.","Batu yang diasah air menjadi halus, bukan karena kuat, tapi karena sabar.","Petani terbaik menanam benih sebelum melihat hasilnya.","Hemat pangkal kaya, boros pangkal sesal.","Koin yang ditabung hari ini adalah senyum di masa depan.","Angin topan datang dan pergi, tapi gunung tetap berdiri — begitu juga rencana yang teguh.","Jalan seribu ri dimulai dari satu langkah.","Kesuksesan finansial adalah maraton, bukan lari cepat.","Kain terbaik ditenun benang demi benang.","Danau yang tenang berasal dari sumber yang setia mengalir.","Semut kecil pun bisa membangun gundukan besar dengan kerja terus-menerus.","Cahaya lentera kecil tetap menerangi jalan yang gelap.","Jangan tunggu kaya untuk mulai menabung, tabunglah untuk menjadi kaya.","Pedang terbaik ditempa berkali-kali dalam api.","Seperti origami, rencana keuangan yang rapi butuh lipatan yang teliti.","Musim akan berganti, tapi kebiasaan baik akan tetap membuahkan hasil.","Kesabaran adalah akar dari segala ketenangan finansial.","Satu tetes hujan tak berarti, tapi bersama ribuan tetes lain, ia menjadi sungai.","Rumah yang kokoh dibangun dari fondasi yang ditabung pelan-pelan.","Ketenangan hati datang dari dompet yang terkendali.","Sebelum badai, tupai bijak sudah mengisi lumbungnya.","Disiplin kecil hari ini adalah kebebasan besar nanti.","Layaknya bonsai, kekayaan tumbuh indah lewat perawatan sabar.","Api unggun besar berasal dari percikan kecil yang dijaga.","Jangan buru-buru menuai sebelum benih sempat berakar.","Guru terbaik dalam menabung adalah waktu itu sendiri.","Ombak kecil yang konsisten mengukir karang paling keras.","Kelapa jatuh tak jauh dari kebiasaan menabung yang ditanam sejak dini.","Zen mengajarkan: nikmati proses, bukan hanya hasil akhir.","Perahu kecil pun bisa berlayar jauh jika arahnya tepat dan sabar.","Menabung adalah bentuk cinta kepada diri di masa depan.","Kertas washi yang kuat dibuat dari serat yang ditenun perlahan.","Jangan malu menabung sedikit, malulah jika tidak memulai sama sekali.","Cangkir teh yang penuh dimulai dari tetes pertama.","Gunung Fuji terlihat megah karena dibentuk selama ribuan tahun.","Rezeki yang dijaga akan menjaga pemiliknya kembali.","Katak di sumur kecil tumbuh besar bila diberi waktu dan ruang.","Kebiasaan baik yang diulang menjadi karakter, karakter menjadi takdir.","Setia pada rencana kecil lebih baik daripada mimpi besar tanpa langkah.","Embun pagi yang tekun akan membasahi seluruh ladang.","Kesederhanaan hari ini adalah kemewahan yang tenang di hari nanti.","Pelan tapi pasti, seperti kura-kura menuju garis impian.","Rasa syukur atas yang sedikit membuka pintu bagi yang lebih banyak.","Waktu terbaik menabung adalah kemarin, waktu kedua terbaik adalah sekarang."];
+
+const TIPS = ["Terapkan aturan 50/30/20: kebutuhan, keinginan, dan tabungan.","Sisihkan tabungan di awal bulan, bukan sisa di akhir bulan.","Buat rekening terpisah khusus untuk setiap target tabungan.","Gunakan sistem amplop untuk mengontrol pengeluaran harian.","Otomatiskan transfer tabungan agar tidak tergoda membatalkannya.","Catat setiap pemasukan dan pengeluaran, sekecil apa pun.","Tetapkan target nominal dan tenggat waktu yang jelas untuk tiap celengan.","Bulatkan setiap transaksi dan tabung sisanya.","Coba tantangan 52 minggu: naikkan nominal tabungan tiap minggu.","Review langganan bulanan, hentikan yang tak lagi terpakai.","Masak di rumah beberapa kali seminggu untuk memangkas pengeluaran makan.","Tunggu 24 jam sebelum membeli barang di luar rencana.","Bandingkan harga di beberapa tempat sebelum belanja besar.","Manfaatkan diskon dan cashback, tapi jangan jadi alasan boros.","Simpan uang receh fisik di toples sebagai cadangan darurat kecil.","Buat daftar belanja dan patuhi, hindari belanja impulsif.","Pisahkan dana darurat dari dana untuk target impian.","Gunakan aplikasi pencatat keuangan agar arus kas selalu terlihat.","Evaluasi progres tabungan setiap akhir minggu.","Beri nama pada setiap celengan agar tujuannya terasa nyata.","Sisihkan bonus atau THR langsung ke tabungan target.","Kurangi jajan kopi harian, alihkan selisihnya ke celengan.","Jual barang yang tak terpakai dan tabung hasilnya.","Gunakan uang tunai untuk pengeluaran harian agar lebih terasa.","Tetapkan hari bebas belanja setiap minggu.","Buat visual progress bar agar termotivasi melihat kemajuan.","Cicil target besar menjadi setoran mingguan yang lebih ringan.","Manfaatkan waktu gajian untuk langsung memindahkan dana tabungan.","Cari sumber penghasilan tambahan untuk mempercepat target.","Hindari utang konsumtif yang menggerus kemampuan menabung.","Gunakan kalkulator target untuk tahu berapa harus disisihkan per hari.","Rayakan pencapaian kecil agar kebiasaan menabung terasa menyenangkan.","Simpan struk belanja untuk evaluasi pengeluaran bulanan.","Tetapkan limit belanja hiburan tiap bulan.","Manfaatkan promo transportasi umum untuk hemat ongkos.","Buat meal plan mingguan agar belanja dapur lebih efisien.","Investasikan sebagian tabungan jangka panjang setelah dana darurat cukup.","Gunakan reminder harian untuk cek progres celengan.","Pisahkan uang jajan anak dengan sistem tabungan sederhana.","Tabung dulu, belanjakan sisanya — bukan sebaliknya.","Manfaatkan fitur backup data agar riwayat tabungan tak hilang.","Beri tag pada celengan sesuai prioritas: penting, keinginan, impian.","Pin celengan paling mendesak agar selalu terlihat di atas.","Cetak laporan tabungan bulanan sebagai bahan evaluasi.","Gunakan warna berbeda untuk tiap kategori tabungan agar mudah dikenali.","Tentukan konsekuensi kecil jika target mingguan tak tercapai.","Cari teman untuk saling mengingatkan target tabungan bersama.","Manfaatkan momen diskon gaji ke-13 untuk menabung ekstra.","Kurangi frekuensi makan di luar, ganti dengan bekal.","Gunakan fitur pencarian untuk cepat menemukan celengan tertentu.","Tinjau ulang target tabungan setiap tiga bulan sekali.","Sisihkan uang kembalian belanja ke celengan digital.","Hindari membawa kartu kredit saat jalan-jalan tanpa rencana belanja.","Manfaatkan aplikasi ini untuk memantau semua celengan dalam satu layar.","Buat target realistis agar semangat menabung tidak cepat padam.","Sisihkan dana liburan jauh-jauh hari agar tak membebani bulan berjalan.","Gunakan sortir berdasarkan target terdekat untuk fokus prioritas.","Tabung selisih harga saat membeli barang versi lebih murah.","Cadangkan minimal tiga bulan pengeluaran sebagai dana darurat.","Manfaatkan waktu senggang untuk mengevaluasi ulang anggaran.","Gunakan mode gelap di malam hari agar mata lebih nyaman saat mencatat.","Restore data secara berkala ke perangkat lain sebagai cadangan aman.","Setor sedikit tapi sering, lebih baik daripada menunggu jumlah besar."];
+
+const MOTIVASI = ["Setiap koin yang kau tabung adalah langkah menuju kebebasan.","Mimpi besar dimulai dari celengan kecil di sudut kamar.","Kamu tidak perlu cepat, kamu hanya perlu konsisten.","Hari ini menabung sedikit, besok tersenyum lebih lebar.","Masa depanmu berterima kasih atas kebiasaan hari ini.","Bukan seberapa banyak, tapi seberapa sering kau berusaha.","Kamu sedang membangun sesuatu yang tak terlihat: ketenangan.","Setiap setoran adalah surat cinta untuk dirimu di masa depan.","Semangatmu hari ini menentukan kelegaanmu nanti.","Jangan bandingkan tabunganmu dengan orang lain, bandingkan dengan dirimu kemarin.","Satu langkah kecil hari ini lebih berarti dari seribu rencana tanpa aksi.","Kesabaranmu sedang menabur benih kemakmuran.","Kau lebih kuat dari godaan belanja impulsif hari ini.","Celengan ini adalah bukti bahwa kamu percaya pada masa depanmu sendiri.","Teruslah menabung, bukan karena mudah, tapi karena berharga.","Kebiasaan kecil yang konsisten mengalahkan tekad besar yang cepat padam.","Setiap kali kau menahan diri, kau sedang membebaskan dirimu sendiri.","Impianmu layak diperjuangkan, mulai dari koin pertama.","Progresmu mungkin lambat, tapi ia tetap progres.","Kau tidak sendirian dalam perjalanan ini, teruskan langkahmu.","Rasa bangga terbesar datang dari target yang kau capai sendiri.","Uang yang kau tabung hari ini adalah pilihan yang kau syukuri besok.","Fokus pada progres, bukan kesempurnaan.","Setiap target yang tercapai adalah bukti kekuatan kebiasaanmu.","Jangan menyerah saat toples terasa masih kosong, teruslah mengisi.","Kau sedang menulis cerita kesuksesanmu sendiri, satu koin setiap hari.","Ketekunanmu hari ini adalah hadiah untuk dirimu di masa depan.","Rayakan setiap kemajuan, sekecil apa pun itu.","Kebebasan finansial dimulai dari keberanian menabung koin pertama.","Kamu lebih disiplin dari yang kau kira.","Toples ini akan penuh, selama kau terus percaya dan berusaha.","Semua pencapaian besar dimulai dari keputusan kecil untuk memulai.","Hari yang baik untuk menabung adalah hari ini.","Kau pantas mendapatkan hidup yang tenang secara finansial.","Setiap rintangan yang kau lewati membuat kebiasaanmu makin kuat.","Jangan takut mulai dari nominal kecil, takutlah tidak memulai sama sekali.","Konsistensimu hari ini adalah fondasi kebebasanmu nanti.","Percayalah, usaha kecil yang konsisten membentuk hasil besar.","Kau sedang menabur ketenangan untuk dirimu yang akan datang.","Setiap target tercapai adalah bukti bahwa kau mampu lebih dari yang kau kira.","Semangat hari ini menentukan senyummu di hari target tercapai.","Jadikan menabung sebagai kebiasaan, bukan beban.","Kau sedang berlari maraton finansial, bukan sprint — nikmati prosesnya.","Setiap rupiah yang tersimpan adalah kepercayaan pada dirimu sendiri.","Impian tak pernah kadaluarsa selama kau terus menabungnya.","Kesuksesan finansial adalah kumpulan kebiasaan baik yang diulang.","Kau mampu mengendalikan keinginan hari ini demi kebutuhan besok.","Toples kosong hari ini adalah janji yang akan kau tepati esok.","Semangatmu adalah bahan bakar terbaik menuju target tabungan.","Percayalah, setiap usaha kecil membawa dampak besar dalam jangka panjang.","Kau tidak butuh motivasi sempurna, kau hanya butuh mulai.","Jadikan hari ini hari pertama dari kebiasaan menabung seumur hidup.","Setiap kali kau menabung, kau memilih dirimu di masa depan.","Ketenangan finansial dimulai dari keberanian mencatat dan menabung.","Kau sudah lebih baik dari dirimu yang belum mulai menabung.","Nikmati proses mengisi toples, bukan hanya menunggu penuh.","Langkah kecil hari ini adalah cerita besar di masa depan.","Kau layak merayakan setiap koin yang berhasil kau simpan.","Jangan tunda kebahagiaan finansial, mulai dari sekarang.","Kesuksesan bukan tujuan akhir, tapi kebiasaan setiap hari.","Setiap target yang tercapai membuka jalan menuju target berikutnya.","Percayalah pada proses, toples ini pasti penuh pada waktunya."];
+
+const PSIKOLOGI = ["Mental accounting: otak cenderung memperlakukan uang berbeda tergantung sumbernya, sadari bias ini.","Delayed gratification: menunda kesenangan kecil hari ini melatih kekuatan menuju tujuan besar.","Temptation bundling: gabungkan aktivitas menabung dengan hal yang kau sukai agar terasa ringan.","Efek IKEA: kita lebih menghargai sesuatu yang kita bangun sendiri, termasuk tabungan.","Bias status quo membuat kita malas mengubah kebiasaan, mulailah dengan langkah sekecil apa pun.","Loss aversion: rasa kehilangan terasa dua kali lebih kuat dari rasa mendapatkan, manfaatkan untuk menghindari boros.","Automating good habits mengurangi beban keputusan harian soal menabung.","Visualisasi target membuat otak lebih termotivasi mengejar tujuan jangka panjang.","Present bias membuat kita lebih memilih kesenangan instan, lawan dengan komitmen otomatis.","Habit stacking: tempelkan kebiasaan menabung pada rutinitas yang sudah ada, misalnya setelah gajian.","Efek Zeigarnik: tugas yang belum selesai (target belum tercapai) akan terus diingat otak, manfaatkan sebagai pengingat.","Social proof: berbagi progres tabungan dengan orang terdekat meningkatkan konsistensi.","Self-affirmation: mengakui kemajuan kecil memperkuat identitas sebagai penabung yang disiplin.","Paradox of choice: terlalu banyak pilihan celengan bisa membingungkan, fokus pada beberapa prioritas saja.","Anchoring: tetapkan target awal yang jelas agar keputusan finansial berikutnya lebih terarah.","Emosi berbelanja sering muncul saat stres, kenali pemicunya sebelum menabung terganggu.","Growth mindset dalam keuangan: kemampuan mengelola uang bisa dilatih, bukan bakat bawaan.","Efek framing: menyebut tabungan sebagai 'investasi masa depan' terasa lebih memotivasi daripada 'menahan diri'.","Reward system kecil setelah mencapai milestone membantu otak mengasosiasikan menabung dengan hal positif.","Sunk cost fallacy: jangan terus boros hanya karena sudah terlanjur mengeluarkan banyak bulan ini, mulai ulang kapan saja.","Identity-based habits: lihat dirimu sebagai 'orang yang menabung', bukan sekadar 'orang yang mencoba menabung'.","Choice architecture: buat jalur menabung lebih mudah daripada jalur belanja impulsif.","Efek diam: jeda sejenak sebelum transaksi besar mengurangi keputusan impulsif.","Kepuasan tertunda melatih korteks prefrontal untuk pengendalian diri jangka panjang.","Menuliskan alasan emosional di balik target membuat motivasi menabung lebih tahan lama.","Progress visible bias: melihat progres secara visual meningkatkan rasa kontrol dan motivasi.","Efek Diderot: satu pembelian sering memicu pembelian lain, sadari rantai konsumsi ini.","Cognitive load rendah membuat keputusan menabung otomatis lebih mudah dipertahankan.","Reframing kebutuhan vs keinginan membantu otak membuat keputusan finansial lebih jernih.","Peer pressure finansial nyata, kelilingi diri dengan lingkungan yang mendukung kebiasaan menabung.","Micro-commitments (menabung kecil rutin) membangun kepercayaan diri untuk komitmen besar.","Emotional spending sering menjadi pelarian sementara, cari alternatif yang lebih sehat.","Efek kepemilikan membuat kita lebih menghargai uang yang sudah 'diberi nama tujuan'.","Menetapkan deadline membuat otak memprioritaskan tujuan dengan lebih serius.","Kebiasaan terbentuk lebih kuat lewat pengulangan konsisten daripada intensitas usaha sesaat.","Self-compassion penting: sesekali gagal menabung bukan akhir dari perjalanan, lanjutkan lagi.","Decision fatigue di akhir hari membuat kita lebih boros, siapkan rencana belanja di pagi hari.","Efek kontras: bandingkan harga barang dengan berapa hari kerja untuk mendapatkannya, bukan nominal semata.","Positive reinforcement lebih efektif membentuk kebiasaan daripada rasa bersalah.","Autonomy dalam menabung, memilih target sendiri, meningkatkan komitmen jangka panjang.","Efek keterikatan waktu: menabung untuk 'diri masa depan' terasa lebih nyata jika kita membayangkannya secara konkret.","Rasa syukur atas pencapaian kecil melepaskan dopamin yang memperkuat kebiasaan baik.","Precommitment device seperti auto-debet membantu mengalahkan godaan jangka pendek.","Mindful spending: sadari setiap pengeluaran, bukan sekadar reaksi otomatis.","Efek Pygmalion: percaya bahwa kau bisa mencapai target membuatmu lebih mungkin mencapainya.","Chunking target besar menjadi bagian kecil membuat otak merasa lebih mampu mencapainya.","Regret aversion: bayangkan penyesalan tidak menabung untuk mendorong keputusan yang lebih baik hari ini.","Emosi positif saat menabung meningkatkan kemungkinan kebiasaan itu bertahan lama.","Efek keterbukaan data: mencatat pengeluaran secara transparan mengurangi pemborosan tak sadar.","Motivasi intrinsik (kepuasan pribadi) lebih tahan lama dibanding motivasi ekstrinsik semata.","Kebiasaan baru butuh rata-rata dua bulan untuk menjadi otomatis, bersabarlah pada dirimu sendiri.","Efek pembingkaian waktu: menabung harian terasa lebih ringan daripada menabung bulanan sekaligus.","Self-monitoring rutin meningkatkan kesadaran dan kontrol atas kebiasaan finansial.","Analisis paralisis terjadi saat terlalu banyak berpikir, kadang cukup mulai dengan langkah kecil.","Efek pengingat visual seperti toples yang terlihat mempercepat pembentukan kebiasaan menabung.","Rasa memiliki tujuan yang jelas mengurangi kecemasan finansial secara signifikan.","Kepuasan menunda pembelian sering lebih besar daripada kepuasan membeli itu sendiri.","Membangun kebiasaan kecil yang bisa dipertahankan lebih penting daripada target besar yang sulit dijaga.","Refleksi mingguan atas kebiasaan finansial membantu menyesuaikan strategi lebih awal.","Efek narasi diri: ceritakan progresmu sebagai kisah sukses yang sedang berjalan, bukan kegagalan yang tertunda.","Dukungan sosial meningkatkan akuntabilitas dan konsistensi menabung.","Kepercayaan diri finansial dibangun dari bukti nyata: catatan progres yang terus bertambah."];
+
+let QUOTES = [
+  ...PETUAH.map(t=>({cat:'Petuah 「和」', text:t})),
+  ...TIPS.map(t=>({cat:'Tips Praktis', text:t})),
+  ...MOTIVASI.map(t=>({cat:'Motivasi', text:t})),
+  ...PSIKOLOGI.map(t=>({cat:'Psikologi Uang', text:t})),
+];
+// shuffle once per session for variety
+for(let i=QUOTES.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [QUOTES[i],QUOTES[j]]=[QUOTES[j],QUOTES[i]]; }
+
+let motivIdx = 0;
+function showMotiv(idx){
+  motivIdx = ((idx % QUOTES.length) + QUOTES.length) % QUOTES.length;
+  const q = QUOTES[motivIdx];
+  $('#motivText').removeClass('show');
+  setTimeout(()=>{
+    $('#motivCat').text(q.cat);
+    $('#motivText').text(q.text);
+    $('#motivCount').text((motivIdx+1)+' / '+QUOTES.length);
+    $('#motivText').addClass('show');
+  }, 220);
+}
+$('#motivNext').on('click', ()=> showMotiv(motivIdx+1));
+$('#motivBack').on('click', ()=> showMotiv(motivIdx-1));
+showMotiv(0);
+
+let autoTimer = null;
+$('#motivAuto').on('change', function(){
+  if(this.checked){ autoTimer = setInterval(()=>showMotiv(motivIdx+1), 6000); }
+  else { clearInterval(autoTimer); }
+});
+
+/* ================= INIT ================= */
+renderGoals();
+
+});
+</script>
+</body>
+</html>
